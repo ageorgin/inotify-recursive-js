@@ -9,16 +9,21 @@ var EventEmitter = require("events").EventEmitter,
     fs = require("fs");
 
 
-function Watcher(base_directory) {
+function Watcher(base_directory, exclude_directory) {
+
+    if (typeof exclude_directory === 'undefined') {
+        exclude_directory = new Array();
+    }
+
     var hashtable = {};
     var self = this;
     console.log(" [Watcher] Home directory: " + base_directory);
 
 
     var fresh_Start = function() {
-        add_Watch(base_directory);
+        //add_Watch(base_directory);
 
-        var directory_child = scandirSync(base_directory);
+        var directory_child = scandirSync(base_directory, exclude_directory);
         if (directory_child.length !== 0)
             for (var i = 0, len = directory_child.length; i < len; i++)
                 add_Watch(directory_child[i]);
@@ -62,7 +67,7 @@ function Watcher(base_directory) {
     };
 
 
-    var scandirSync = function(directory) {
+    var scandirSync = function(directory, exclude_dir) {
         var files = fs.readdirSync(directory);
         var directories = [];
         for (var i in files) {
@@ -71,10 +76,10 @@ function Watcher(base_directory) {
                 continue;
 
             var name = path.normalize(String(directory + "/" + files[i]));
-            if (fs.statSync(name).isDirectory()) {
+            if (fs.statSync(name).isDirectory() && -1 == exclude_dir.indexOf(files[i])) {
                 console.log(" [scandir] Directory: " + name);
                 directories.push(name);
-                directories = directories.concat(scandirSync(name));
+                directories = directories.concat(scandirSync(name, exclude_dir));
                 //} else {
                 //    console.log(" [scandir] File: " + name);
             }
